@@ -24,58 +24,6 @@ from Dataset import own_prepare, MyDataset
 from tensorboardX import SummaryWriter
 import datetime
 
-class NetTrain:
-    def __init__(self, model, optimizer, scheduler, criterion, train_data, valid_data, batch_size, learning_rate, patience, num_epochs):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = model.to(self.device)
-        # self.train_loader = data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
-        # self.valid_loader = data.DataLoader(valid_data, batch_size=batch_size, shuffle=False)
-        self.optimizer = optimizer
-        self.scheduler = scheduler
-        self.criterion = criterion
-        self.num_epochs = num_epochs
-        self.stop_count = 0
-        self.best_loss = float('inf')
-
-    def train(self):
-        for epoch in range(self.num_epochs):
-            train_loss = self.train_epoch()
-            valid_loss = self.valid_epoch()
-            self.scheduler.step(valid_loss)
-            print(f"Epoch: {epoch+1} Train Loss: {train_loss:.6f} Valid Loss: {valid_loss:.6f}")
-            if valid_loss < self.best_loss:
-                self.best_loss = valid_loss
-                self.stop_count = 0
-                torch.save({'model_state_dict': self.model.state_dict(), 'optimizer_state_dict': self.optimizer.state_dict()}, 'checkpoint.pt')
-            else:
-                self.stop_count += 1
-            if self.stop_count >= self.patience:
-                print(f'Early stopping after {epoch+1} epochs.')
-                break
-
-    def train_epoch(self):
-        self.model.train()
-        loss_total = 0.0
-        for inputs, labels in self.train_loader:
-            inputs, labels = inputs.to(self.device), labels.to(self.device)
-            self.optimizer.zero_grad()
-            outputs = self.model(inputs)
-            loss = self.criterion(outputs, labels)
-            loss.backward()
-            self.optimizer.step()
-            loss_total += loss.item()
-        return loss_total / len(self.train_loader)
-
-    def valid_epoch(self):
-        self.model.eval()
-        loss_total = 0.0
-        with torch.no_grad():
-            for inputs, labels in self.valid_loader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
-                outputs = self.model(inputs)
-                loss = self.criterion(outputs, labels)
-                loss_total += loss.item()
-        return loss_total / len(self.valid_loader)
 # ------------------ 训练 ---------------------------
 def Mytrain(# model, optimizer, scheduler=None,
             datas, seed, num_epochs, lr, device, wd, loss_name,
