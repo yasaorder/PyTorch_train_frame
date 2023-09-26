@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import cv2
 from statistics import mean
 from collections import defaultdict
-
+from Eval import eval
 import Frame
 from segment_anything.utils.transforms import ResizeLongestSide
 import torchvision.utils
@@ -131,6 +131,10 @@ def Mytrain(# model, optimizer, scheduler=None,
     for epoch in range(num_epochs):
         epoch_train_losses = []
         epoch_val_losses = []
+        epoch_train_accuracy = []
+        epoch_val_accuracy = []
+        epoch_train_recall = []
+        epoch_val_recall = []
         torch.cuda.empty_cache()
         train_num = 0
 
@@ -186,10 +190,16 @@ def Mytrain(# model, optimizer, scheduler=None,
             gt_binary_mask = torch.as_tensor(gt_mask_resized > 0, dtype=torch.float32)
 
             per_train_loss = loss_fn(binary_mask, gt_binary_mask)
+            per_train_accuracy = eval.pixel_accuracy(binary_mask, gt_binary_mask)
+            per_train_recall = eval.recall(binary_mask, gt_binary_mask)
+
             optimizer.zero_grad()
             per_train_loss.backward()
             optimizer.step()
+
             epoch_train_losses.append(per_train_loss.item())
+            epoch_train_accuracy.append(per_train_accuracy)
+            epoch_train_recall.append(per_train_recall)
 
             # 进度条
             load_show(train_num, len(train_ids), start_time_train, legend='train', load_button=load_button)
@@ -244,7 +254,12 @@ def Mytrain(# model, optimizer, scheduler=None,
                 gt_binary_mask = torch.as_tensor(gt_mask_resized > 0, dtype=torch.float32)
 
                 per_loss_val = loss_fn(binary_mask, gt_binary_mask)
+                per_val_accuracy = eval.pixel_accuracy(binary_mask, gt_binary_mask)
+                per_val_recall = eval.recall(binary_mask, gt_binary_mask)
+
                 epoch_val_losses.append(per_loss_val.item())
+                epoch_val_accuracy.append(per_val_accuracy)
+                epoch_val_recall.append(per_val_recall)
 
                 # 进度条
                 load_show(val_num, len(val_ids), start_time_val, legend='val', load_button=load_button)
@@ -254,7 +269,7 @@ def Mytrain(# model, optimizer, scheduler=None,
                 visdualer.get_img_to_pred_load(torch.squeeze(input_image, 0), binary_mask, epoch, 'train')
 
         # 更新
-        solver.epoch_step(epoch_train_losses, epoch_val_losses)
+        solver.epoch_step(epoch_train_losses, epoch_val_losses, epoch_train_accuracy, epoch_val_accuracy, epoch_train_recall, epoch_val_recall)
         if solver.is_stop:
             break
 
@@ -263,6 +278,9 @@ def Mytrain(# model, optimizer, scheduler=None,
 
     solver.finsh()
     plt = solver.get_lossfig()
+    solver.get_acc_recall_fig()
+    solver.get_f1_score()
+    solver.get_lrfig()
 
     visdualer.close()
     return save_dir
