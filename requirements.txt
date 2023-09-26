@@ -1,0 +1,11 @@
+numpy~=1.24.3
+torch~=1.9.0+cu111
+torchvision~=0.10.0+cu111
+opencv-python~=4.7.0.72
+matplotlib~=3.7.2
+tqdm~=4.66.1
+setuptools~=68.2.2
+simplejson~=3.19.1
+tensorboardx~=2.6.2.2
+pillow~=10.0.0
+pycocotools~=2.0.7
