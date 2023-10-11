@@ -13,6 +13,11 @@ https://zhuanlan.zhihu.com/p/447351423
 包含各种损失函数和注意力机制模块
 ## visdual.py
 可视化模块， 包含可视化图像、可视化预测掩膜、可视化损失函数
+终端输入
+'''python
+ tensorboard --logdir 'log/visdual'
+'''
+ ————这里为存放日志文件的文件夹
 ## mytrain.py
 训练网络的代码， 可根据需要修改， 包含train函数和test函数，分别进行训练和测试
 ## experiment.py
